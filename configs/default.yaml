@@ -1,0 +1,37 @@
+# Default Configuration File
+# This file tracks all hyperparameters for training, evaluation, and analysis to ensure reproducibility.
+
+experiment:
+  name: "vit_base_cl_waterbirds"
+  seed: 42
+  output_dir: "./outputs/vit_base_cl_waterbirds"
+
+model:
+  type: "cl_vit" # Options: cl_vit, mim_vit, hybrid_vit
+  backbone: "vit_base_patch16_224"
+  pretrained_weights: "path/to/weights.pth"
+  num_classes: 2
+
+data:
+  dataset: "waterbirds"
+  data_dir: "./data/waterbirds"
+  image_size: 224
+  batch_size: 64
+  num_workers: 4
+
+training:
+  epochs: 50
+  learning_rate: 1e-4
+  weight_decay: 1e-4
+  optimizer: "adamw"
+  scheduler: "cosine"
+  # Group DRO or other robust training params can go here
+  robust_algorithm: "erm" # Options: erm, group_dro
+
+analysis:
+  layers_to_analyze: [0, 3, 6, 9, 11] # Indices of transformer layers to extract features from
+  attention_distance: True
+  spectral_diversity: True
+  linear_probing:
+    epochs: 10
+    learning_rate: 1e-3

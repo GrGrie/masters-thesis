@@ -1,0 +1,18 @@
+experiment:
+  name: "vit_base_cl_waterbirds_analyze"
+  seed: 42
+  output_dir: "./outputs/vit_base_cl_waterbirds"
+
+model:
+  type: "cl_vit"
+  backbone: "vit_base_patch16_224"
+  num_classes: 2
+
+analysis:
+  checkpoint: "./outputs/vit_base_cl_waterbirds/model_best.pth"
+  layers_to_analyze: [0, 3, 6, 9, 11] # Indices of transformer layers to extract features from
+  attention_distance: True
+  spectral_diversity: True
+  linear_probing:
+    epochs: 10
+    learning_rate: 1e-3

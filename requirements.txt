@@ -1,0 +1,14 @@
+torch>=2.0.0
+torchvision
+numpy
+pandas
+scipy
+scikit-learn
+tqdm
+matplotlib
+seaborn
+timm>=0.9.0
+umap-learn
+einops
+wandb
+PyYAML
