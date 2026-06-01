@@ -18,7 +18,7 @@ RQ1: Do ViTs pretrained with CL, MIM, and hybrid CL+MIM differ in robustness to 
 
 RQ2: Which representation properties correlate with robustness: global vs. local attention, attention homogeneity, spectral diversity, or object/background separability?
 
-RQ3: At which layers are object-related and background-related features encoded, amplified, or suppressed, and does this behavior differ between CL, MIM, and CL+MIM?
+RQ3: At which layers are object-related and spurious-attribute features encoded, amplified, or suppressed, and does this behavior differ between CL, MIM, and CL+MIM?
 
 ## Model Conditions
 
@@ -41,11 +41,16 @@ The initial protocol uses pretrained checkpoints rather than reproducing large-s
 
 The primary benchmark is Waterbirds.
 
-Required labels:
+Required dataset sample fields:
 
-- `y`: object class, landbird or waterbird.
-- `place`: background class, land or water.
-- `group`: the ordered pair `(y, place)`.
+- `image`: input image tensor.
+- `target`: object class, landbird or waterbird.
+- `spurious`: spurious attribute. For Waterbirds this is the `place` metadata column, land or water.
+- `group`: the ordered pair `(target, spurious)`.
+- `index`: dataset index.
+- `path`: image path.
+
+Waterbirds may also expose `place` and `background` aliases for interpretability, but shared training, evaluation, and analysis code should consume `spurious`.
 
 Required Waterbirds groups:
 
@@ -67,7 +72,7 @@ Default target/spurious pair:
 - Target: Blond Hair.
 - Spurious attribute: Male.
 
-CelebA should use the same evaluation interface as Waterbirds: image, target, spurious/background label, group ID, split, and index.
+CelebA should use the same evaluation interface as Waterbirds: image, target, spurious label, group ID, split, and index.
 
 ## Compute Environment
 
@@ -177,7 +182,7 @@ Required extracted values:
 - selected layer patch-token representations when needed.
 - attention maps for selected layers when available.
 - target labels.
-- background/spurious labels.
+- spurious-attribute labels.
 - group IDs.
 - prediction correctness.
 
@@ -204,8 +209,8 @@ Representation metrics:
 Probe metrics:
 
 - Object-label probe accuracy by layer.
-- Background-label probe accuracy by layer.
-- Object-minus-background probe gap by layer.
+- Spurious-attribute probe accuracy by layer.
+- Object-minus-spurious probe gap by layer.
 
 ## Minimum Experiment Set
 
@@ -222,7 +227,7 @@ For each required checkpoint, run:
 1. Fine-tuning.
 2. Test-set robustness evaluation.
 3. Feature extraction.
-4. Object/background probing.
+4. Object/spurious probing.
 5. Spectral analysis.
 6. Attention analysis where attention maps are accessible.
 
@@ -267,7 +272,7 @@ Evidence needed:
 
 - MoCo v3 has higher worst-group accuracy than MAE.
 - MoCo v3 shows more global attention in later layers.
-- MoCo v3 has stronger object probes or weaker background dominance than MAE.
+- MoCo v3 has stronger object probes or weaker spurious-attribute dominance than MAE.
 
 H2: Hybrid CL+MIM may provide a better trade-off between global semantic abstraction and local token diversity.
 
@@ -275,14 +280,14 @@ Evidence needed:
 
 - CMAE matches or exceeds MoCo v3 and MAE in worst-group accuracy.
 - CMAE preserves spectral diversity or token-level diversity better than pure CL.
-- CMAE has strong object probes without excessive background probe dominance.
+- CMAE has strong object probes without excessive spurious-attribute probe dominance.
 
-H3: Robust models should encode object-related information more strongly or more separably than background-related information in later layers.
+H3: Robust models should encode object-related information more strongly or more separably than spurious-attribute information in later layers.
 
 Evidence needed:
 
-- Object probe accuracy exceeds background probe accuracy in later layers.
-- The object-background probe gap aligns with worst-group accuracy.
+- Object probe accuracy exceeds spurious-attribute probe accuracy in later layers.
+- The object-spurious probe gap aligns with worst-group accuracy.
 - Layer-wise differences are systematic across model families and seeds.
 
 ## Implementation Targets

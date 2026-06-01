@@ -4,6 +4,15 @@ import torch.optim as optim
 from tqdm import tqdm
 import wandb
 
+def unpack_batch(batch):
+    if isinstance(batch, dict):
+        return batch["image"], batch["target"], batch["spurious"]
+
+    # Temporary compatibility with older tuple-style datasets.
+    images, targets, spurious = batch
+    return images, targets, spurious
+
+
 def train_epoch(model, dataloader, optimizer, criterion, device):
     """
     Runs one epoch of fine-tuning.
@@ -14,8 +23,7 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
     total = 0
     
     for batch in tqdm(dataloader, desc="Training"):
-        # For Waterbirds: image, target (bird type), background (place)
-        images, targets, backgrounds = batch
+        images, targets, _spurious = unpack_batch(batch)
         images, targets = images.to(device), targets.to(device)
         
         optimizer.zero_grad()

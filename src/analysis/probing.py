@@ -14,11 +14,11 @@ class LinearProbe(nn.Module):
 def train_probe(features, labels, epochs=10, lr=1e-3, device='cuda'):
     """
     Trains a linear probe on frozen features to predict a specific target.
-    This is used to test object vs. background separability at different layers.
+    This is used to test object vs. spurious-attribute separability at different layers.
     
     Args:
         features (Tensor): Frozen extracted representations from a specific ViT layer.
-        labels (Tensor): Target labels (either object labels or background labels).
+        labels (Tensor): Target labels (either object labels or spurious-attribute labels).
         
     Returns:
         float: Accuracy of the linear probe on a held-out validation set.

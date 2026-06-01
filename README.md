@@ -24,7 +24,7 @@ The project architecture is organized in a modular way to allow easy experimenta
 - `src/analysis/`: Core code for representation analysis:
   - `attention.py`: Attention distance, spatial aggregation, and homogeneity.
   - `spectral.py`: Singular value spectra, effective rank, and UMAP/PCA visualization.
-  - `probing.py`: Linear probing for object vs. background features.
+  - `probing.py`: Linear probing for object vs. spurious-attribute features.
 - `src/utils/`: Generic helpers like configuration loading, wandb setup, and seed enforcement.
 - `scripts/`: Bash scripts to execute common workflows (e.g., training sweeps).
 - `notebooks/`: Jupyter notebooks for exploratory data analysis (EDA) and plotting final results.
@@ -52,18 +52,29 @@ The project architecture is organized in a modular way to allow easy experimenta
 
 3. Download and prepare the datasets according to the instructions in `src/datasets/README.md` (to be created). Waterbirds is the primary dataset; CelebA is the second dataset used to test a non-background spurious attribute.
 
+4. Run a lightweight smoke check:
+   ```bash
+   python main.py --config configs/train.yaml --mode smoke
+   ```
+
+   The smoke check validates the config, sets deterministic seeds, records environment information, writes a config snapshot under `outputs/.../smoke/`, and runs a tiny CPU-only synthetic batch. It does not require datasets or checkpoints.
+
 ## Workflow / How to Run
 
 1. **Configure**: Set up your experiment parameters in `configs/train.yaml` or `configs/analyze.yaml`.
-2. **Train/Fine-tune**: Run the main entry point to fine-tune a model:
+2. **Smoke check**: Verify the local environment and config wiring:
+   ```bash
+   python main.py --config configs/train.yaml --mode smoke
+   ```
+3. **Train/Fine-tune**: Run the main entry point to fine-tune a model:
    ```bash
    python main.py --config configs/train.yaml --mode train
    ```
-3. **Analyze**: Run the representation analysis pipeline:
+4. **Analyze**: Run the representation analysis pipeline:
    ```bash
    python main.py --config configs/analyze.yaml --mode analyze
    ```
-4. **Evaluate**: Run downstream evaluation metrics:
+5. **Evaluate**: Run downstream evaluation metrics:
    ```bash
    python main.py --config configs/train.yaml --mode evaluate
    ```

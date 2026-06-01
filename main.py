@@ -1,14 +1,11 @@
 import argparse
-import yaml
-import logging
 
-# Set up basic logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+from src.utils.config import get_output_dir, load_config, validate_config
+from src.utils.logging import get_logger, log_environment, setup_logging
+from src.utils.seed import set_seed
 
-def load_config(config_path):
-    with open(config_path, 'r') as f:
-        return yaml.safe_load(f)
+
+logger = get_logger(__name__)
 
 def run_training(config):
     logger.info("Starting training pipeline...")
@@ -34,17 +31,33 @@ def run_analysis(config):
     # from src.analysis.spectral import plot_umap
     pass
 
+def run_smoke(config):
+    logger.info("Starting smoke check...")
+    from src.utils.smoke import run_smoke_check
+    result = run_smoke_check(config)
+    logger.info("Smoke check passed: %s", result)
+
 def main():
     parser = argparse.ArgumentParser(description="Master's Thesis Pipeline")
     parser.add_argument('--config', type=str, default='configs/train.yaml', help='Path to configuration file')
-    parser.add_argument('--mode', type=str, choices=['train', 'evaluate', 'analyze', 'all'], required=True, 
+    parser.add_argument('--mode', type=str, choices=['train', 'evaluate', 'analyze', 'smoke', 'all'], required=True,
                         help='Mode to run the pipeline in')
     
     args = parser.parse_args()
     config = load_config(args.config)
+    validate_config(config, args.mode)
+
+    output_dir = get_output_dir(config)
+    setup_logging(output_dir)
+    set_seed(int(config['experiment']['seed']))
 
     logger.info(f"Loaded config: {args.config}")
     logger.info(f"Running in mode: {args.mode}")
+    log_environment(logger)
+
+    if args.mode == 'smoke':
+        run_smoke(config)
+        return
 
     if args.mode in ['train', 'all']:
         run_training(config)

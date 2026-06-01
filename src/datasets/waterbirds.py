@@ -2,7 +2,14 @@ import os
 import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision import transforms
+
+
+SPLIT_TO_ID = {
+    "train": 0,
+    "val": 1,
+    "test": 2,
+}
+
 
 class WaterbirdsDataset(Dataset):
     def __init__(self, root_dir, split='train', transform=None):
@@ -15,36 +22,48 @@ class WaterbirdsDataset(Dataset):
             transform (callable, optional): Optional transform to be applied on a sample.
         """
         self.root_dir = root_dir
+        self.split = split
         self.transform = transform
-        
-        # Load metadata
+
+        if split not in SPLIT_TO_ID:
+            valid = ", ".join(SPLIT_TO_ID)
+            raise ValueError(f"Unknown Waterbirds split '{split}'. Expected one of: {valid}")
+
         metadata_path = os.path.join(root_dir, 'metadata.csv')
-        if os.path.exists(metadata_path):
-            self.metadata = pd.read_csv(metadata_path)
-            
-            # Map splits if necessary (e.g., Waterbirds uses 0: train, 1: val, 2: test)
-            split_dict = {'train': 0, 'val': 1, 'test': 2}
-            self.metadata = self.metadata[self.metadata['split'] == split_dict[split]]
-        else:
-            self.metadata = pd.DataFrame()
-            # In a real scenario, this would raise an error or download the dataset.
-            
+        if not os.path.exists(metadata_path):
+            raise FileNotFoundError(f"Waterbirds metadata not found: {metadata_path}")
+
+        metadata = pd.read_csv(metadata_path)
+        required_columns = {"img_filename", "y", "place", "split"}
+        missing_columns = required_columns.difference(metadata.columns)
+        if missing_columns:
+            missing = ", ".join(sorted(missing_columns))
+            raise ValueError(f"Waterbirds metadata is missing required column(s): {missing}")
+
+        self.metadata = metadata[metadata['split'] == SPLIT_TO_ID[split]].reset_index(drop=True)
+
     def __len__(self):
         return len(self.metadata)
 
     def __getitem__(self, idx):
-        if self.metadata.empty:
-            return None, None, None
-
         img_path = os.path.join(self.root_dir, self.metadata.iloc[idx]['img_filename'])
         image = Image.open(img_path).convert('RGB')
-        
-        # 'y' is the object label (e.g., 0 for landbird, 1 for waterbird)
-        # 'place' is the background label (e.g., 0 for land, 1 for water)
-        target = self.metadata.iloc[idx]['y']
-        background = self.metadata.iloc[idx]['place']
+
+        target = int(self.metadata.iloc[idx]['y'])
+        spurious = int(self.metadata.iloc[idx]['place'])
+        group = target * 2 + spurious
         
         if self.transform:
             image = self.transform(image)
-            
-        return image, target, background
+
+        return {
+            "image": image,
+            "target": target,
+            "spurious": spurious,
+            "group": group,
+            "index": int(idx),
+            "path": img_path,
+            # Dataset-specific aliases kept for interpretability and compatibility.
+            "place": spurious,
+            "background": spurious,
+        }

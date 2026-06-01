@@ -4,7 +4,7 @@ This plan turns the thesis proposal into a concrete research and implementation 
 
 ## Scope
 
-- In: Waterbirds as the primary benchmark, CelebA as a secondary benchmark if time permits, CL/MIM/CL+MIM ViT comparison, fine-tuning, average accuracy, worst-group accuracy, optional background consistency, attention analysis, spectral analysis, object/background probing, correlation analysis, and thesis writing.
+- In: Waterbirds as the primary benchmark, CelebA as the second benchmark for a non-background spurious attribute, CL/MIM/CL+MIM ViT comparison, fine-tuning, average accuracy, worst-group accuracy, optional background consistency for Waterbirds, attention analysis, spectral analysis, object/spurious-attribute probing, correlation analysis, and thesis writing.
 - Out: inventing a new robust training algorithm, large-scale SSL pretraining from scratch unless pretrained checkpoints are unavailable, causal claims stronger than the empirical evidence supports, and broad benchmarking beyond the thesis question.
 
 ## Final Research Goal
@@ -17,7 +17,7 @@ The expected final thesis contribution is not just a table of accuracies. It sho
 
 1. Downstream robustness: average accuracy and worst-group accuracy.
 2. Internal geometry: attention distance, attention homogeneity, spectral diversity, and effective rank.
-3. Semantic accessibility: layer-wise object-label and background-label probing.
+3. Semantic accessibility: layer-wise object-label and spurious-attribute probing.
 
 ## Step 1: Freeze The Research Protocol ✓
 
@@ -43,7 +43,7 @@ Actions:
   - Group accuracy for all label/background groups.
   - Worst-group accuracy.
   - Optional background consistency.
-  - Probe accuracy for object and background prediction.
+  - Probe accuracy for object and spurious-attribute prediction.
   - Attention distance and attention homogeneity.
   - Singular value spectrum and effective rank.
 - Define the minimum acceptable experiment set:
@@ -55,7 +55,7 @@ Deliverable:
 
 - A frozen experimental protocol that can be referenced later in the thesis methodology chapter.
 
-## Step 2: Make The Repository Reproducible
+## Step 2: Make The Repository Reproducible ✓
 
 The current repository has the right module structure, but most files are still placeholders. First make the project runnable end to end with a minimal baseline.
 
@@ -80,7 +80,7 @@ Deliverable:
 
 ## Step 3: Prepare Waterbirds Correctly
 
-Waterbirds is the central dataset because it exposes both object labels and background labels. The dataset implementation must be exact, because all robustness claims depend on group labels.
+Waterbirds is the central dataset because it exposes both object labels and a background-based spurious attribute. The dataset implementation must be exact, because all robustness claims depend on group labels.
 
 Actions:
 
@@ -93,11 +93,11 @@ Actions:
 - Return a structured sample, preferably including:
   - `image`
   - `target`
-  - `background`
+  - `spurious`
   - `group`
   - `index`
   - optional `path`
-- Define group IDs from `(target, background)`:
+- Define group IDs from `(target, spurious)`:
   - landbird on land.
   - landbird on water.
   - waterbird on land.
@@ -123,11 +123,11 @@ CelebA is useful for generalization, but it should not delay the core thesis. Tr
 Actions:
 
 - Create `src/datasets/celeba.py`.
-- Choose one target/spurious pair from the literature, such as Blond Hair as target and Male as spurious attribute.
+- Use a target/spurious pair from the literature, such as Blond Hair as target and Male as spurious attribute.
 - Match the same dataset interface used by Waterbirds:
   - `image`
   - `target`
-  - `background` or `spurious`
+  - `spurious`
   - `group`
   - `index`
 - Add config support for switching datasets.
@@ -304,7 +304,7 @@ Actions:
   - selected layer CLS features.
   - selected layer patch-token features if needed.
   - labels.
-  - background labels.
+  - spurious-attribute labels.
   - group IDs.
   - optional attention maps.
 - Store features in a structured output path:
@@ -314,7 +314,7 @@ Actions:
 Validation:
 
 - Load saved features and verify shapes.
-- Check that labels/backgrounds/groups have the same length as features.
+- Check that labels/spurious attributes/groups have the same length as features.
 - Compare a small direct forward pass to cached values.
 
 Deliverable:
@@ -363,7 +363,7 @@ Actions:
 - Compare homogeneity against:
   - worst-group accuracy.
   - object probe accuracy.
-  - background probe accuracy.
+  - spurious-attribute probe accuracy.
 - Save CSV outputs and plots.
 
 Validation:
@@ -415,7 +415,7 @@ Actions:
 - Complete `src/analysis/probing.py`.
 - Train separate probes for:
   - object label `y`.
-  - background label `place`.
+  - spurious attribute, for example Waterbirds `place`.
   - group ID if useful.
 - Use frozen features only.
 - Use train/validation/test splits consistently.
@@ -424,8 +424,8 @@ Actions:
 - Save probe metrics as CSV.
 - Plot:
   - object probe accuracy by layer.
-  - background probe accuracy by layer.
-  - object-minus-background probe gap by layer.
+  - spurious-attribute probe accuracy by layer.
+  - object-minus-spurious probe gap by layer.
 
 Validation:
 
@@ -435,7 +435,7 @@ Validation:
 
 Deliverable:
 
-- Layer-wise object/background separability evidence for RQ2 and RQ3.
+- Layer-wise object/spurious separability evidence for RQ2 and RQ3.
 
 ## Step 15: Run The Minimum Viable Experiment Grid
 
@@ -498,15 +498,15 @@ Actions:
   - attention homogeneity.
   - effective rank.
   - object probe accuracy.
-  - background probe accuracy.
-  - object-background probe gap.
+  - spurious-attribute probe accuracy.
+  - object-spurious probe gap.
 - Compute rank correlations where sample size allows.
 - Focus on effect patterns, not overclaiming statistical significance from small N.
 - Compare early, middle, and late layers.
 - Check whether robust models:
   - have higher object probe accuracy.
-  - have lower background probe accuracy.
-  - have a larger object-background gap.
+  - have lower spurious-attribute probe accuracy.
+  - have a larger object-spurious gap.
   - show more global attention.
   - preserve useful spectral diversity.
 
@@ -541,7 +541,7 @@ Target figures:
 - Attention distance by layer.
 - Attention homogeneity by layer.
 - Effective rank by layer.
-- Object vs. background probe accuracy by layer.
+- Object vs. spurious-attribute probe accuracy by layer.
 - Optional PCA/UMAP visualization for qualitative illustration.
 
 Deliverable:
@@ -610,14 +610,14 @@ H2:
 - Required evidence:
   - Hybrid matches or exceeds CL in worst-group accuracy.
   - Hybrid preserves higher spectral diversity or lower excessive attention homogeneity than CL.
-  - Hybrid has strong object probes without disproportionately strong background probes.
+  - Hybrid has strong object probes without disproportionately strong spurious-attribute probes.
 
 H3:
 
-- Claim: Robust models encode object information more strongly or more separably than background information in later layers.
+- Claim: Robust models encode object information more strongly or more separably than spurious-attribute information in later layers.
 - Required evidence:
-  - Object probe accuracy exceeds background probe accuracy in later layers.
-  - The object-background probe gap correlates with worst-group accuracy.
+  - Object probe accuracy exceeds spurious-attribute probe accuracy in later layers.
+  - The object-spurious probe gap correlates with worst-group accuracy.
   - Layer-wise behavior differs systematically between robust and shortcut-prone models.
 
 Deliverable:
@@ -708,7 +708,7 @@ Week 4:
 
 - Build feature extraction cache.
 - Implement probing.
-- Produce object/background probe plots.
+- Produce object/spurious probe plots.
 
 Week 5:
 
@@ -742,7 +742,7 @@ The thesis project is ready to write up when the following are complete:
 - Fine-tuning runs are reproducible from config files.
 - Average accuracy and worst-group accuracy are computed for every required condition.
 - Layer-wise features are cached for every required checkpoint.
-- Object/background probes are trained and evaluated.
+- Object/spurious-attribute probes are trained and evaluated.
 - Spectral diversity metrics are computed across layers.
 - Attention distance and homogeneity are computed or explicitly scoped out with justification.
 - Final plots and tables exist for the main claims.
