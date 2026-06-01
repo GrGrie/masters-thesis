@@ -8,6 +8,8 @@ tqdm
 matplotlib
 seaborn
 timm>=0.9.0
+huggingface_hub
+safetensors
 umap-learn
 einops
 wandb

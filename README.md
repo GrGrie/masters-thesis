@@ -6,7 +6,7 @@ This repository contains the codebase for the Master's Thesis: **"Linking Self-S
 
 The goal of this project is to systematically evaluate how different self-supervised learning (SSL) pretraining objectives (Contrastive Learning (CL), Masked Image Modeling (MIM), and Hybrid CL+MIM) affect a Vision Transformer's robustness to spurious correlations.
 
-Instead of proposing a new robust training algorithm, this project focuses on **empirical and mechanistic analysis** across layers to understand how semantic vs. spurious information is geometrically organized.
+Instead of proposing a new robust training algorithm, this project focuses on **empirical and mechanistic analysis** across layers to understand how semantic vs. spurious information is geometrically organized. Waterbirds is the primary benchmark, and CelebA is the second benchmark for testing a non-background spurious attribute.
 
 ## Architecture
 
@@ -15,6 +15,7 @@ The project architecture is organized in a modular way to allow easy experimenta
 ### Directory Structure
 
 - `data/`: Raw and processed datasets (e.g., Waterbirds, CelebA). Data is not tracked by Git.
+- `checkpoints/`: Downloaded pretrained checkpoints and local model weights. Checkpoints are not tracked by Git.
 - `src/datasets/`: PyTorch Dataset classes and data transforms.
 - `src/models/`: ViT architectures and wrappers for different SSL regimes (CL, MIM, Hybrid).
 - `configs/`: YAML configuration files containing hyperparameters and paths (e.g., `train.yaml`, `analyze.yaml`).
@@ -37,7 +38,19 @@ The project architecture is organized in a modular way to allow easy experimenta
    pip install -r requirements.txt
    ```
 
-2. Download and prepare the datasets according to the instructions in `src/datasets/README.md` (to be created).
+2. Download the pretrained SSL checkpoints:
+   ```bash
+   python -m src.utils.download_models
+   ```
+
+   This stores the default MoCo v3 ViT-B/16, MAE ViT-B/16, and CMAE ViT-B/16 checkpoints under `checkpoints/pretrained/` and writes `checkpoints/pretrained/download_manifest.json` for reproducibility. To inspect the planned downloads without downloading large files, run:
+   ```bash
+   python -m src.utils.download_models --dry-run
+   ```
+
+   On the V100 cluster, run the same command from the repository root after installing dependencies in the training environment. If the cluster has no internet access from compute nodes, run it on a login node or download once locally and copy `checkpoints/pretrained/` to the cluster workspace.
+
+3. Download and prepare the datasets according to the instructions in `src/datasets/README.md` (to be created). Waterbirds is the primary dataset; CelebA is the second dataset used to test a non-background spurious attribute.
 
 ## Workflow / How to Run
 
